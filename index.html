@@ -7,7 +7,7 @@
     <!-- Fontes do Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://script.google.com/macros/s/AKfycbzdqY7wI15vV9raAE_0PLCnFm4k84clB-MmBAFm11nqzJeF08_OjyB8Nofz4jNYJLSf/exec">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
     
     <!-- React e Babel CDNs -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -266,7 +266,7 @@
     <!-- Scripts do Aplicativo em React/Babel -->
     <script type="text/babel">
         // INSIRA A URL DO SEU GOOGLE APPS SCRIPT DEPLOYADO COMO WEB APP AQUI:
-        const WEB_APP_URL = "SUA_URL_DO_WEB_APP_AQUI";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdqY7wI15vV9raAE_0PLCnFm4k84clB-MmBAFm11nqzJeF08_OjyB8Nofz4jNYJLSf/exec";
 
         // Mapeamento local de ícones nativos em SVG para evitar dependências pesadas quebradiças
         const Icons = {
@@ -482,7 +482,7 @@
 
             const handleUpdatePin = async (newPin) => {
                 setSheetPin(newPin);
-                showToast("Senha de acesso atualizada na planilha");
+                showToast("Senha de acesso updated na planilha");
                 await fetchBackend('savePin', { pinStr: newPin });
             };
 
