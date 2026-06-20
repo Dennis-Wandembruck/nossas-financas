@@ -8,11 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-    
-    <!-- React e Babel CDNs -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         :root {
@@ -26,7 +21,7 @@
             --expense: #B6452C;
             --expense-soft: #F7E9E5;
             --radius: 16px;
-            
+
             /* Cores dos perfis */
             --color-p1: #0F6E66;
             --color-p2: #9C4F6E;
@@ -91,7 +86,7 @@
         .month-switch button:hover { background: #f9fafb; }
         .month-switch .label { font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; min-width: 150px; text-align: center; }
 
-        /* Summary Cards */
+        /* Summary Cards (usado em Perfis) */
         .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
         .summary-card {
             background: var(--surface); border-radius: var(--radius); padding: 12px 10px;
@@ -111,13 +106,39 @@
         .card h2 { font-size: 14px; font-family: 'Sora', sans-serif; margin-bottom: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; }
         .empty-state { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 32px 8px; }
 
-        /* Custom Native Charts using styled divs */
-        .chart-bar-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        /* Hero card: anel de saldo + entradas/saídas */
+        .hero-card {
+            display: flex; align-items: center; gap: 18px; padding: 22px 18px;
+            background: linear-gradient(165deg, var(--surface) 60%, var(--accent-soft) 180%);
+        }
+        .balance-ring-wrap { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+        .balance-ring { display: block; }
+        .balance-ring-center {
+            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        .balance-ring-label { font-size: 11px; color: var(--ink-soft); font-weight: 500; margin-bottom: 2px; }
+        .balance-ring-value { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; line-height: 1.2; }
+        .hero-stats { display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 0; }
+        .hero-stat { display: flex; align-items: center; gap: 10px; }
+        .hero-stat-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .hero-stat-label { font-size: 11px; color: var(--ink-soft); margin-bottom: 2px; }
+        .hero-stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Barras de consumo por categoria, com ícone e porcentagem */
+        .chart-bar-container { display: flex; flex-direction: column; gap: 16px; margin-top: 6px; }
         .chart-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-        .chart-bar-label { width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); font-weight: 500; }
-        .chart-bar-track { flex: 1; height: 14px; background: var(--bg); border-radius: 999px; overflow: hidden; position: relative; }
+        .chart-bar-icon {
+            width: 28px; height: 28px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .chart-bar-main { flex: 1; min-width: 0; }
+        .chart-bar-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 5px; }
+        .chart-bar-label { color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chart-bar-pct { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-left: 8px; }
+        .chart-bar-track { flex: 1; height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; position: relative; }
         .chart-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
-        .chart-bar-value { width: 75px; text-align: right; font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); font-size: 11px; }
+        .chart-bar-value { width: 72px; text-align: right; font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); font-size: 11px; flex-shrink: 0; }
 
         /* Transactions List */
         .tx-row {
@@ -150,21 +171,27 @@
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 480px; background: var(--surface);
             border-top: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-around;
-            padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
             z-index: 40;
         }
         .nav-btn {
             border: none; background: transparent; display: flex; flex-direction: column; align-items: center;
-            gap: 4px; color: var(--ink-soft); cursor: pointer; font-size: 10px; font-family: 'Inter', sans-serif; width: 64px;
+            gap: 4px; color: var(--ink-soft); cursor: pointer; font-size: 10px; font-family: 'Inter', sans-serif;
+            flex: 1; padding: 4px 0;
         }
-        .nav-btn.active { color: var(--accent); font-weight: 500; }
+        .nav-btn.active { color: var(--accent); font-weight: 600; }
+        .nav-add-slot {
+            flex: 1; display: flex; justify-content: center;
+        }
         .nav-add {
-            width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: #fff;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(145deg, var(--accent), #0B5650); color: #fff;
             display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
-            box-shadow: 0 4px 12px rgba(15,110,102,0.35); margin-top: -20px; transition: transform 0.2s;
+            box-shadow: 0 6px 16px rgba(15,110,102,0.4); margin-top: -26px; transition: transform 0.15s ease;
+            flex-shrink: 0;
         }
-        .nav-add:active { transform: scale(0.95); }
+        .nav-add:active { transform: scale(0.92); }
 
         /* Modals */
         .modal-overlay {
@@ -186,8 +213,8 @@
             font-size: 14px; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--ink); outline: none; transition: border 0.2s;
         }
         .field input:focus, .field select:focus { border-color: var(--ink-soft); }
-        
-        .segmented { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg); p: 2px; }
+
+        .segmented { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
         .segmented button {
             flex: 1; border: none; background: transparent; padding: 10px; font-size: 13px; cursor: pointer; color: var(--ink-soft); font-weight: 500; transition: all 0.2s;
         }
@@ -213,7 +240,7 @@
         .goal-progress-track { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
         .goal-progress-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s ease; }
         .goal-amounts { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
-        
+
         /* Calculator inside Goals */
         .goal-calc-box {
             background: var(--bg); border-radius: 10px; padding: 12px; margin-top: 12px; border: 1px solid var(--border);
@@ -235,13 +262,18 @@
             padding: 14px; background: var(--surface); margin-bottom: 12px; color: var(--ink); outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         .pin-error { color: var(--expense); font-size: 13px; margin-bottom: 12px; font-weight: 500; }
-        
+
         /* Configuration Inputs & Categories management */
-        .cat-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-        .cat-color-input { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0; cursor: pointer; background: none; flex-shrink: 0; }
-        .cat-icon-select { width: 80px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: var(--bg); }
-        .cat-name-input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--ink); }
-        .cat-edit-row button { border: none; background: transparent; color: var(--ink-soft); cursor: pointer; padding: 6px; }
+        .cat-group-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-soft); margin-bottom: 10px; }
+        .cat-edit-row {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 10px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border);
+        }
+        .cat-color-input { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; padding: 0; cursor: pointer; background: none; flex-shrink: 0; }
+        .cat-icon-select { width: 78px; padding: 7px 4px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; background: var(--surface); flex-shrink: 0; }
+        .cat-name-input { flex: 1; min-width: 90px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 13px; background: var(--surface); color: var(--ink); }
+        .cat-type-select { flex: 1; min-width: 90px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 8px; font-size: 11px; background: var(--surface); color: var(--ink-soft); }
+        .cat-edit-row button { border: none; background: transparent; color: var(--expense); cursor: pointer; padding: 6px; flex-shrink: 0; }
 
         /* Toast notifications */
         .toast {
@@ -258,958 +290,1254 @@
         .profile-box { background: var(--bg); border-radius: 12px; padding: 14px; border: 1px solid var(--border); }
         .profile-box-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .profile-box-val { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; }
+
+        /* Erro fatal */
+        .fatal-error { padding: 32px; text-align: center; color: var(--expense); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+        .fatal-error button { margin: 16px auto 0; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <!-- Scripts do Aplicativo em React/Babel -->
-    <script type="text/babel">
-        // INSIRA A URL DO SEU GOOGLE APPS SCRIPT DEPLOYADO COMO WEB APP AQUI:
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdqY7wI15vV9raAE_0PLCnFm4k84clB-MmBAFm11nqzJeF08_OjyB8Nofz4jNYJLSf/exec";
+    <script>
+    "use strict";
+    /* =========================================================================
+       NOSSO FINANCEIRO — versão 100% HTML/CSS/JavaScript puro (vanilla)
+       Sem React, sem Babel, sem build step. Roda direto em qualquer navegador.
+       Mesma integração com o Google Apps Script (Code.gs) da versão anterior.
+       ========================================================================= */
 
-        // Mapeamento local de ícones nativos em SVG para evitar dependências pesadas quebradiças
-        const Icons = {
-            Home: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-            List: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
-            Plus: (props) => <svg width={props.size || "18"} height={props.size || "18"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-            X: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-            Trash: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
-            Pencil: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
-            Left: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
-            Right: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
-            Target: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-            User: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-            Settings: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-            TrendingUp: (props) => <svg width={props.size || "12"} height={props.size || "12"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-            TrendingDown: (props) => <svg width={props.size || "12"} height={props.size || "12"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
-            Wallet: (props) => <svg width={props.size || "16"} height={props.size || "16"} viewBox="0 0 24 24" fill="none" stroke={props.color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M16 12h5v4h-5z"/></svg>,
-            Check: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-            Calculator: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="22"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
-            Food: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-            Transport: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="22" height="13" rx="2"/><path d="M4 21v-5M20 21v-5M1 9h22M14 3v6M10 3v6"/></svg>,
-            Health: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-            Shopping: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>,
-            Other: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        };
+    // INSIRA A URL DO SEU GOOGLE APPS SCRIPT DEPLOYADO COMO WEB APP AQUI:
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdqY7wI15vV9raAE_0PLCnFm4k84clB-MmBAFm11nqzJeF08_OjyB8Nofz4jNYJLSf/exec";
 
-        const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    // Marca de versão visível no rodapé do app — útil para confirmar que o navegador
+    // está usando o arquivo mais recente e não uma cópia em cache.
+    const APP_BUILD = "build-2026-06-20-dashboard-categorias";
 
-        function currentMonthKey() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    /* ==================== ÍCONES (SVG strings) ==================== */
+    const ICONS = {
+        Home: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+        List: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+        Plus: (size) => `<svg width="${size||18}" height="${size||18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+        X: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+        Trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+        Pencil: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+        Left: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+        Right: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+        Target: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+        User: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        Settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        TrendingUp: (size) => `<svg width="${size||12}" height="${size||12}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+        TrendingDown: (size) => `<svg width="${size||12}" height="${size||12}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`,
+        Wallet: (size) => `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M16 12h5v4h-5z"/></svg>`,
+        Calculator: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="22"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>',
+        Food: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        Transport: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="22" height="13" rx="2"/><path d="M4 21v-5M20 21v-5M1 9h22M14 3v6M10 3v6"/></svg>',
+        Health: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+        Shopping: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>',
+        Other: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+        Wallet2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M16 12h5v4h-5z"/></svg>',
+        TrendingUp2: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+        Gift: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>',
+        Briefcase: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
+    };
+    function icon(name, size) {
+        const i = ICONS[name];
+        if (!i) return ICONS.Other;
+        return typeof i === 'function' ? i(size) : i;
+    }
+
+    /* ==================== HELPERS ==================== */
+    const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+    function currentMonthKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    }
+    function monthLabel(key) {
+        const [y, m] = key.split("-").map(Number);
+        return `${MONTH_NAMES[m - 1]} de ${y}`;
+    }
+    function shiftMonth(key, delta) {
+        let [y, m] = key.split("-").map(Number);
+        m += delta;
+        if (m < 1) { m = 12; y -= 1; }
+        if (m > 12) { m = 1; y += 1; }
+        return `${y}-${String(m).padStart(2, "0")}`;
+    }
+    function fmtCurrency(n) {
+        return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+    }
+    function uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+    // Escapa texto para uso seguro dentro de innerHTML (evita HTML quebrado e XSS básico)
+    function esc(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    /* ==================== CHAMADA À API (Google Apps Script) ==================== */
+    async function fetchBackend(action, payload) {
+        payload = payload || {};
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            // SEM header Content-Type de propósito: força text/plain e evita o preflight CORS do Google.
+            body: JSON.stringify(Object.assign({ action: action }, payload))
+        });
+        const result = await response.json();
+        if (result.status === 'error') throw new Error(result.error || 'Erro desconhecido na API');
+        return result.data;
+    }
+
+    /* ==================== ESTADO GLOBAL DA APLICAÇÃO ==================== */
+    const state = {
+        loading: true,
+        loadError: null,
+        config: null,
+        transactions: [],
+        goals: [],
+        sheetPin: "",
+        unlocked: false,
+        view: "dashboard",
+        selectedMonth: currentMonthKey(),
+        showTxModal: false,
+        editingTx: null,
+        showGoalModal: false,
+        editingGoal: null,
+        toast: "",
+        filterCat: "todas",
+        // estados de formulário temporários (UI)
+        lockPinInput: "",
+        lockError: false,
+        onboardN1: "",
+        onboardN2: "",
+        onboardPin: "",
+        goalCalcInputs: {}, // por goal.id: { amount: '', monthly: '' }
+        settingsDraft: null
+    };
+
+    let toastTimer = null;
+    function showToast(msg) {
+        state.toast = msg;
+        renderToastOnly();
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { state.toast = ""; renderToastOnly(); }, 3000);
+    }
+
+    const root = document.getElementById('root');
+
+    /* ==================== CARGA INICIAL ==================== */
+    async function loadInitialData() {
+        try {
+            const [cfgRes, txsRes, glsRes, pinRes] = await Promise.all([
+                fetchBackend('getConfig'),
+                fetchBackend('getTransactions'),
+                fetchBackend('getGoals'),
+                fetchBackend('getPin')
+            ]);
+
+            if (cfgRes && cfgRes !== "null") state.config = JSON.parse(cfgRes);
+            if (txsRes) state.transactions = JSON.parse(txsRes);
+            if (glsRes) state.goals = JSON.parse(glsRes);
+            if (pinRes) state.sheetPin = String(pinRes).trim();
+        } catch (err) {
+            console.error("Erro ao conectar com a Planilha:", err);
+            state.loadError = (err && err.message) ? err.message : String(err);
+        } finally {
+            state.loading = false;
+            render();
         }
-        function monthLabel(key) {
-            const [y, m] = key.split("-").map(Number);
-            return `${MONTH_NAMES[m - 1]} de ${y}`;
+    }
+
+    /* ==================== AÇÕES (equivalentes aos handlers do app) ==================== */
+    async function handleOnboard(n1, n2, pinCode) {
+        const defaultCats = [
+            { id: "moradia", name: "Moradia", color: "#5B7FB5", icon: "Home", type: "despesa" },
+            { id: "alimentacao", name: "Alimentação", color: "#D98B3F", icon: "Food", type: "despesa" },
+            { id: "transporte", name: "Transporte", color: "#6B4E71", icon: "Transport", type: "despesa" },
+            { id: "saude", name: "Saúde", color: "#3F9E83", icon: "Health", type: "despesa" },
+            { id: "lazer", name: "Lazer", color: "#C5587A", icon: "Shopping", type: "despesa" },
+            { id: "outros", name: "Outros", color: "#8C8F99", icon: "Other", type: "ambos" },
+            { id: "salario", name: "Salário", color: "#2E8B6E", icon: "Wallet2", type: "receita" },
+            { id: "renda-extra", name: "Renda Extra", color: "#4F9D6E", icon: "TrendingUp2", type: "receita" }
+        ];
+        const newCfg = { names: [n1, n2], categories: defaultCats, appName: "Nosso Financeiro" };
+        state.loading = true;
+        render();
+        try {
+            await fetchBackend('saveConfig', { configStr: JSON.stringify(newCfg) });
+            await fetchBackend('savePin', { pinStr: pinCode });
+            state.config = newCfg;
+            state.sheetPin = pinCode;
+            state.unlocked = true;
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao gravar onboarding");
+        } finally {
+            state.loading = false;
+            render();
         }
-        function shiftMonth(key, delta) {
-            let [y, m] = key.split("-").map(Number);
-            m += delta;
-            if (m < 1) { m = 12; y -= 1; }
-            if (m > 12) { m = 1; y += 1; }
-            return `${y}-${String(m).padStart(2, "0")}`;
+    }
+
+    async function handleSaveTx(tx) {
+        let updated;
+        if (tx.id) {
+            updated = state.transactions.map(t => t.id === tx.id ? tx : t);
+        } else {
+            updated = state.transactions.concat([Object.assign({}, tx, { id: uid() })]);
         }
-        function fmtCurrency(n) {
-            return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+        state.transactions = updated;
+        state.showTxModal = false;
+        state.editingTx = null;
+        showToast("Lançamento guardado");
+        render();
+        try {
+            await fetchBackend('saveTransactions', { transactionsStr: JSON.stringify(updated) });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
         }
-        function uid() {
-            return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+
+    async function handleDeleteTx(id) {
+        const updated = state.transactions.filter(t => t.id !== id);
+        state.transactions = updated;
+        showToast("Lançamento removido");
+        render();
+        try {
+            await fetchBackend('saveTransactions', { transactionsStr: JSON.stringify(updated) });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
         }
+    }
 
-        /* Chamador de API do Apps Script com suporte a fetch CORS remoto */
-        async function fetchBackend(action, payload = {}) {
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    // REMOVIDO: headers: { 'Content-Type': 'application/json' }
-                    // Isso força o navegador a enviar como text/plain, evitando o bloqueio de CORS do Google!
-                    body: JSON.stringify({ action, ...payload })
-                });
-                const result = await response.json();
-                return result.data;
-            } catch (e) {
-                console.error("Erro na comunicação com o Planilhas Google:", e);
-                throw e;
-            }
+    async function handleSaveGoal(goal) {
+        let updated;
+        if (goal.id) {
+            updated = state.goals.map(g => g.id === goal.id ? goal : g);
+        } else {
+            updated = state.goals.concat([Object.assign({}, goal, { id: uid() })]);
         }
+        state.goals = updated;
+        state.showGoalModal = false;
+        state.editingGoal = null;
+        showToast("Meta salva com sucesso");
+        render();
+        try {
+            await fetchBackend('saveGoals', { goalsStr: JSON.stringify(updated) });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
+        }
+    }
 
-        /* ==================== CORE APP ==================== */
-        function App() {
-            const [loading, setLoading] = React.useState(true);
-            const [config, setConfig] = React.useState(null);
-            const [transactions, setTransactions] = React.useState([]);
-            const [goals, setGoals] = React.useState([]);
-            const [sheetPin, setSheetPin] = React.useState("");
-            
-            const [view, setView] = React.useState("dashboard");
-            const [selectedMonth, setSelectedMonth] = React.useState(currentMonthKey());
-            const [showTxModal, setShowTxModal] = React.useState(false);
-            const [editingTx, setEditingTx] = React.useState(null);
-            const [showGoalModal, setShowGoalModal] = React.useState(false);
-            const [editingGoal, setEditingGoal] = React.useState(null);
-            
-            const [toast, setToast] = React.useState("");
-            const [filterCat, setFilterCat] = React.useState("todas");
-            const [unlocked, setUnlocked] = React.useState(false);
+    async function handleDeleteGoal(id) {
+        const updated = state.goals.filter(g => g.id !== id);
+        state.goals = updated;
+        showToast("Meta removida");
+        render();
+        try {
+            await fetchBackend('saveGoals', { goalsStr: JSON.stringify(updated) });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
+        }
+    }
 
-            // Carga inicial sincronizada com a Planilha Google
-            React.useEffect(() => {
-                (async () => {
-                    try {
-                        const [cfgRes, txsRes, glsRes, pinRes] = await Promise.all([
-                            fetchBackend('getConfig'),
-                            fetchBackend('getTransactions'),
-                            fetchBackend('getGoals'),
-                            fetchBackend('getPin')
-                        ]);
+    async function handleUpdateConfig(patched) {
+        const next = Object.assign({}, state.config, patched);
+        state.config = next;
+        showToast("Configurações salvas");
+        render();
+        try {
+            await fetchBackend('saveConfig', { configStr: JSON.stringify(next) });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
+        }
+    }
 
-                        if (cfgRes && cfgRes !== "null") setConfig(JSON.parse(cfgRes));
-                        if (txsRes) setTransactions(JSON.parse(txsRes));
-                        if (glsRes) setGoals(JSON.parse(glsRes));
-                        if (pinRes) setSheetPin(String(pinRes).trim());
-                    } catch (err) {
-                        showToast("Erro ao conectar com a Planilha. Verifique as configurações.");
-                    } finally {
-                        setLoading(false);
-                    }
-                })();
-            }, []);
+    async function handleUpdatePin(newPin) {
+        state.sheetPin = newPin;
+        showToast("Senha de acesso atualizada na planilha");
+        render();
+        try {
+            await fetchBackend('savePin', { pinStr: newPin });
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao salvar na planilha");
+        }
+    }
 
-            const showToast = (msg) => {
-                setToast(msg);
-                setTimeout(() => setToast(""), 3000);
-            };
+    /* ==================== TEMPLATES (cada função devolve uma string HTML) ==================== */
 
-            const handleOnboard = async (n1, n2, pinCode) => {
-                const defaultCats = [
-                    { id: "moradia", name: "Moradia", color: "#5B7FB5", icon: "Home" },
-                    { id: "alimentacao", name: "Alimentação", color: "#D98B3F", icon: "Food" },
-                    { id: "transporte", name: "Transporte", color: "#6B4E71", icon: "Transport" },
-                    { id: "saude", name: "Saúde", color: "#3F9E83", icon: "Health" },
-                    { id: "lazer", name: "Lazer", color: "#C5587A", icon: "Shopping" },
-                    { id: "outros", name: "Outros", color: "#8C8F99", icon: "Other" }
-                ];
-                const newCfg = { names: [n1, n2], categories: defaultCats, appName: "Nosso Financeiro" };
-                setLoading(true);
-                try {
-                    await fetchBackend('saveConfig', { configStr: JSON.stringify(newCfg) });
-                    await fetchBackend('savePin', { pinStr: pinCode });
-                    setConfig(newCfg);
-                    setSheetPin(pinCode);
-                    setUnlocked(true);
-                } catch(e) {
-                    showToast("Erro ao gravar onboarding");
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            const handleSaveTx = async (tx) => {
-                let updated;
-                if (tx.id) {
-                    updated = transactions.map(t => t.id === tx.id ? tx : t);
-                } else {
-                    updated = [...transactions, { ...tx, id: uid() }];
-                }
-                setTransactions(updated);
-                setShowTxModal(false);
-                setEditingTx(null);
-                showToast("Lançamento guardado");
-                await fetchBackend('saveTransactions', { transactionsStr: JSON.stringify(updated) });
-            };
-
-            const handleDeleteTx = async (id) => {
-                const updated = transactions.filter(t => t.id !== id);
-                setTransactions(updated);
-                showToast("Lançamento removido");
-                await fetchBackend('saveTransactions', { transactionsStr: JSON.stringify(updated) });
-            };
-
-            const handleSaveGoal = async (goal) => {
-                let updated;
-                if (goal.id) {
-                    updated = goals.map(g => g.id === goal.id ? goal : g);
-                } else {
-                    updated = [...goals, { ...goal, id: uid() }];
-                }
-                setGoals(updated);
-                setShowGoalModal(false);
-                setEditingGoal(null);
-                showToast("Meta salva com sucesso");
-                await fetchBackend('saveGoals', { goalsStr: JSON.stringify(updated) });
-            };
-
-            const handleDeleteGoal = async (id) => {
-                const updated = goals.filter(g => g.id !== id);
-                setGoals(updated);
-                showToast("Meta removida");
-                await fetchBackend('saveGoals', { goalsStr: JSON.stringify(updated) });
-            };
-
-            const handleUpdateConfig = async (patched) => {
-                const next = { ...config, ...patched };
-                setConfig(next);
-                showToast("Configurações salvas");
-                await fetchBackend('saveConfig', { configStr: JSON.stringify(next) });
-            };
-
-            const handleUpdatePin = async (newPin) => {
-                setSheetPin(newPin);
-                showToast("Senha de acesso atualizada na planilha");
-                await fetchBackend('savePin', { pinStr: newPin });
-            };
-
-            if (loading) {
-                return (
-                    <div className="app-container">
-                        <div className="loading-screen">
-                            <div className="spinner"></div>
-                            <p>Buscando dados na sua Planilha Google...</p>
-                        </div>
-                    </div>
-                );
-            }
-
-            if (!config) {
-                return (
-                    <div className="app-container">
-                        <Onboarding onSave={handleOnboard} />
-                        {toast && <div className="toast">{toast}</div>}
-                    </div>
-                );
-            }
-
-            if (sheetPin && !unlocked) {
-                return (
-                    <div className="app-container">
-                        <LockScreen validPin={sheetPin} onUnlock={() => setUnlocked(true)} />
-                    </div>
-                );
-            }
-
-            return (
-                <div className="app-container">
-                    {/* Top Header */}
-                    <div className="header">
-                        <div>
-                            <h1 className="display">{config.appName || "Nosso Financeiro"}</h1>
-                            <div className="sub">{config.names[0]} & {config.names[1]}</div>
-                        </div>
-                        <span style={{ color: 'var(--accent)' }}><Icons.Wallet size="22"/></span>
-                    </div>
-
-                    {/* Vistas Principais */}
-                    <div className="main-content">
-                        {view === "dashboard" && (
-                            <DashboardView 
-                                config={config} 
-                                transactions={transactions} 
-                                selectedMonth={selectedMonth} 
-                                setSelectedMonth={setSelectedMonth} 
-                            />
-                        )}
-                        {view === "transactions" && (
-                            <TransactionsView 
-                                config={config} 
-                                transactions={transactions} 
-                                filterCat={filterCat} 
-                                setFilterCat={setFilterCat}
-                                onEdit={(tx) => { setEditingTx(tx); setShowTxModal(true); }}
-                                onDelete={handleDeleteTx}
-                            />
-                        )}
-                        {view === "goals" && (
-                            <GoalsView 
-                                goals={goals} 
-                                onAdd={() => { setEditingGoal(null); setShowGoalModal(true); }}
-                                onEdit={(g) => { setEditingGoal(g); setShowGoalModal(true); }}
-                                onDelete={handleDeleteGoal}
-                                onSaveDirect={handleSaveGoal}
-                            />
-                        )}
-                        {view === "profiles" && (
-                            <ProfilesSummaryView 
-                                config={config} 
-                                transactions={transactions} 
-                                selectedMonth={selectedMonth} 
-                            />
-                        )}
-                        {view === "settings" && (
-                            <SettingsView 
-                                config={config} 
-                                currentPin={sheetPin}
-                                onUpdateConfig={handleUpdateConfig}
-                                onUpdatePin={handleUpdatePin}
-                            />
-                        )}
-                    </div>
-
-                    {/* Barra de Navegação Inferior */}
-                    <BottomNav view={view} setView={setView} onAddClick={() => { setEditingTx(null); setShowTxModal(true); }} />
-
-                    {/* Modais de Entrada */}
-                    {showTxModal && (
-                        <TxModal 
-                            config={config} 
-                            tx={editingTx} 
-                            onClose={() => { setShowTxModal(false); setEditingTx(null); }} 
-                            onSave={handleSaveTx} 
-                        />
-                    )}
-
-                    {showGoalModal && (
-                        <GoalModal 
-                            goal={editingGoal} 
-                            onClose={() => { setShowGoalModal(false); setEditingGoal(null); }} 
-                            onSave={handleSaveGoal} 
-                        />
-                    )}
-
-                    {toast && <div className="toast">{toast}</div>}
+    function tplLoading() {
+        return `
+            <div class="app-container">
+                <div class="loading-screen">
+                    <div class="spinner"></div>
+                    <p>Buscando dados na sua Planilha Google...</p>
                 </div>
-            );
-        }
+            </div>`;
+    }
 
-        /* ==================== SUBCOMPONENTES VISTAS ==================== */
-        
-        // 1. TELA DE ACESSO (PIN)
-        function LockScreen({ validPin, onUnlock }) {
-            const [pinInput, setPinInput] = React.useState("");
-            const [error, setError] = React.useState(false);
+    function tplLoadError() {
+        return `
+            <div class="app-container">
+                <div class="fatal-error">
+                    <h2 class="display">Não foi possível conectar</h2>
+                    <p>${esc(state.loadError)}</p>
+                    <p style="font-size:12px;color:var(--ink-soft)">Confira a URL do Web App no Code.gs, se o app está implantado como "Qualquer pessoa" tem acesso, e sua conexão de internet.</p>
+                    <button class="btn-primary" style="max-width:240px;align-self:center" onclick="window.app.retryLoad()">Tentar novamente</button>
+                </div>
+            </div>`;
+    }
 
-            const handleCheck = () => {
-                if (pinInput === validPin) {
-                    onUnlock();
-                } else {
-                    setError(true);
-                    setPinInput("");
-                }
-            };
-
-            return (
-                <div className="lock-screen">
-                    <h1 className="display">🔒 Acesso Protegido</h1>
+    function tplLockScreen() {
+        return `
+            <div class="app-container">
+                <div class="lock-screen">
+                    <h1 class="display">🔒 Acesso Protegido</h1>
                     <p>Digite a senha configurada na sua Planilha Google para entrar.</p>
-                    <input 
-                        className="pin-input"
+                    <input
+                        id="lock-pin-input"
+                        class="pin-input"
                         type="password"
-                        inputMode="numeric"
-                        maxLength={8}
-                        value={pinInput}
-                        onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "")); setError(false); }}
+                        inputmode="numeric"
+                        maxlength="8"
+                        value="${esc(state.lockPinInput)}"
                         placeholder="••••"
-                        onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
                     />
-                    {error && <div className="pin-error">Código incorreto! Confira sua planilha.</div>}
-                    <button className="btn-primary" style={{ maxWidth: 240 }} onClick={handleCheck}>Entrar</button>
+                    ${state.lockError ? '<div class="pin-error">Código incorreto! Confira sua planilha.</div>' : ''}
+                    <button class="btn-primary" style="max-width:240px" onclick="window.app.checkLockPin()">Entrar</button>
                 </div>
-            );
-        }
+            </div>`;
+    }
 
-        // 2. ONBOARDING
-        function Onboarding({ onSave }) {
-            const [n1, setN1] = React.useState("");
-            const [n2, setN2] = React.useState("");
-            const [pCode, setPCode] = React.useState("");
-            const ready = n1.trim() && n2.trim() && pCode.trim().length >= 4;
+    function tplOnboarding() {
+        const ready = state.onboardN1.trim() && state.onboardN2.trim() && state.onboardPin.trim().length >= 4;
+        return `
+            <div class="app-container">
+                <div style="padding:32px; display:flex; flex-direction:column; justify-content:center; min-height:100vh;">
+                    <h1 class="display" style="font-size:24px;margin-bottom:8px;">Bem-vindos! 👋</h1>
+                    <p style="color:var(--ink-soft);font-size:13px;margin-bottom:24px;">Vamos configurar as abas do casal na planilha visível.</p>
 
-            return (
-                <div style={{ padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh' }}>
-                    <h1 className="display" style={{ fontSize: 24, marginBottom: 8 }}>Bem-vindos! 👋</h1>
-                    <p style={{ color: 'var(--ink-soft)', fontSize: 13, marginBottom: 24 }}>Vamos configurar as abas do casal na planilha visível.</p>
-                    
-                    <div className="field">
+                    <div class="field">
                         <label>Nome Dele / Parcial A</label>
-                        <input value={n1} onChange={(e) => setN1(e.target.value)} placeholder="Ex: João" />
+                        <input id="ob-n1" value="${esc(state.onboardN1)}" placeholder="Ex: João" />
                     </div>
-                    <div className="field">
+                    <div class="field">
                         <label>Nome Dela / Parcial B</label>
-                        <input value={n2} onChange={(e) => setN2(e.target.value)} placeholder="Ex: Maria" />
+                        <input id="ob-n2" value="${esc(state.onboardN2)}" placeholder="Ex: Maria" />
                     </div>
-                    <div className="field">
+                    <div class="field">
                         <label>Criar senha para o app (Mínimo 4 números)</label>
-                        <input type="password" value={pCode} onChange={(e) => setPCode(e.target.value.replace(/\D/g, ""))} placeholder="Ex: 1234" />
+                        <input id="ob-pin" type="password" value="${esc(state.onboardPin)}" placeholder="Ex: 1234" />
                     </div>
-                    
-                    <button className="btn-primary" disabled={!ready} onClick={() => onSave(n1.trim(), n2.trim(), pCode)}>
+
+                    <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="window.app.submitOnboard()">
                         Vincular e Inicializar Aplicativo
                     </button>
                 </div>
-            );
-        }
+                ${state.toast ? `<div class="toast">${esc(state.toast)}</div>` : ''}
+            </div>`;
+    }
 
-        // 3. DASHBOARD VIEW
-        function DashboardView({ config, transactions, selectedMonth, setSelectedMonth }) {
-            const currentTxs = React.useMemo(() => {
-                return transactions.filter(t => t.date && t.date.startsWith(selectedMonth));
-            }, [transactions, selectedMonth]);
-
-            const receitas = React.useMemo(() => currentTxs.filter(t => t.type === 'receita').reduce((s, t) => s + Number(t.amount), 0), [currentTxs]);
-            const despesas = React.useMemo(() => currentTxs.filter(t => t.type === 'despesa').reduce((s, t) => s + Number(t.amount), 0), [currentTxs]);
-            const saldo = receitas - despesas;
-
-            const categorySummary = React.useMemo(() => {
-                const map = {};
-                currentTxs.filter(t => t.type === 'despesa').forEach(t => {
-                    map[t.category] = (map[t.category] || 0) + Number(t.amount);
-                });
-                return Object.entries(map).map(([catId, value]) => {
-                    const found = config.categories.find(c => c.id === catId) || { name: "Outros", color: "#8C8F99", icon: "Other" };
-                    return { id: catId, name: found.name, value, color: found.color, icon: found.icon };
-                }).sort((a,b) => b.value - a.value);
-            }, [currentTxs, config.categories]);
-
-            const maxCatValue = categorySummary[0]?.value || 1;
-
-            return (
+    function tplHeader() {
+        const cfg = state.config;
+        return `
+            <div class="header">
                 <div>
-                    <div className="month-switch">
-                        <button onClick={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}><Icons.Left/></button>
-                        <span className="label">{monthLabel(selectedMonth)}</span>
-                        <button onClick={() => setSelectedMonth(shiftMonth(selectedMonth, 1))}><Icons.Right/></button>
-                    </div>
+                    <h1 class="display">${esc(cfg.appName || "Nosso Financeiro")}</h1>
+                    <div class="sub">${esc(cfg.names[0])} &amp; ${esc(cfg.names[1])}</div>
+                </div>
+                <span style="color:var(--accent)">${icon('Wallet', 22)}</span>
+            </div>`;
+    }
 
-                    <div className="summary-row">
-                        <div className="summary-card balance">
-                            <div className="label">Saldo Total</div>
-                            <div className={`value ${saldo >= 0 ? "positive" : "negative"}`}>{fmtCurrency(saldo)}</div>
-                        </div>
-                        <div className="summary-card">
-                            <div className="label"><span style={{color:'var(--accent)'}}><Icons.TrendingUp size="11"/></span> Entradas</div>
-                            <div className="value positive">{fmtCurrency(receitas)}</div>
-                        </div>
-                        <div className="summary-card">
-                            <div className="label"><span style={{color:'var(--expense)'}}><Icons.TrendingDown size="11"/></span> Saídas</div>
-                            <div className="value negative">{fmtCurrency(despesas)}</div>
-                        </div>
-                    </div>
+    function tplBottomNav() {
+        const v = state.view;
+        const navBtn = (id, label, iconName) => `
+            <button class="nav-btn ${v === id ? 'active' : ''}" onclick="window.app.setView('${id}')">
+                ${icon(iconName)} ${label}
+            </button>`;
+        return `
+            <div class="bottom-nav">
+                ${navBtn('dashboard', 'Início', 'Home')}
+                ${navBtn('transactions', 'Extrato', 'List')}
+                <div class="nav-add-slot">
+                    <button class="nav-add" onclick="window.app.openNewTxModal()">${icon('Plus', 22)}</button>
+                </div>
+                ${navBtn('goals', 'Metas', 'Target')}
+                ${navBtn('profiles', 'Perfis', 'User')}
+                ${navBtn('settings', 'Configs', 'Settings')}
+            </div>`;
+    }
 
-                    <div className="card">
-                        <h2>Consumo por Categoria</h2>
-                        {categorySummary.length === 0 ? (
-                            <div className="empty-state">Nenhum gasto registrado neste mês ainda.</div>
-                        ) : (
-                            <div className="chart-bar-container">
-                                {categorySummary.map(c => {
-                                    const pct = Math.round((c.value / maxCatValue) * 100);
-                                    return (
-                                        <div className="chart-bar-row" key={c.id}>
-                                            <div className="chart-bar-label">{c.name}</div>
-                                            <div className="chart-bar-track">
-                                                <div className="chart-bar-fill" style={{ width: `${pct}%`, background: c.color }}></div>
-                                            </div>
-                                            <div className="chart-bar-value">{fmtCurrency(c.value)}</div>
-                                        </div>
-                                    );
-                                })}
+    /* ---------- DASHBOARD ---------- */
+    // Gera um anel de progresso (donut) em SVG puro mostrando a proporção de entradas vs. saídas
+    function tplBalanceRing(receitas, despesas, saldo) {
+        const total = receitas + despesas;
+        const pctReceitas = total > 0 ? (receitas / total) : 0.5;
+        const radius = 54;
+        const circumference = 2 * Math.PI * radius;
+        const receitasLen = circumference * pctReceitas;
+        const despesasLen = circumference - receitasLen;
+        const saldoIsPositive = saldo >= 0;
+
+        return `
+            <div class="balance-ring-wrap">
+                <svg width="140" height="140" viewBox="0 0 140 140" class="balance-ring">
+                    <circle cx="70" cy="70" r="${radius}" fill="none" stroke="var(--expense-soft)" stroke-width="14"/>
+                    <circle cx="70" cy="70" r="${radius}" fill="none" stroke="var(--accent)" stroke-width="14"
+                        stroke-dasharray="${receitasLen} ${despesasLen}" stroke-linecap="round"
+                        transform="rotate(-90 70 70)" style="transition: stroke-dasharray 0.5s ease"/>
+                </svg>
+                <div class="balance-ring-center">
+                    <div class="balance-ring-label">Saldo</div>
+                    <div class="balance-ring-value ${saldoIsPositive ? 'positive' : 'negative'}">${fmtCurrency(saldo)}</div>
+                </div>
+            </div>`;
+    }
+
+    function tplDashboard() {
+        const cfg = state.config;
+        const currentTxs = state.transactions.filter(t => t.date && String(t.date).startsWith(state.selectedMonth));
+        const receitas = currentTxs.filter(t => t.type === 'receita').reduce((s, t) => s + Number(t.amount), 0);
+        const despesas = currentTxs.filter(t => t.type === 'despesa').reduce((s, t) => s + Number(t.amount), 0);
+        const saldo = receitas - despesas;
+
+        const map = {};
+        currentTxs.filter(t => t.type === 'despesa').forEach(t => {
+            map[t.category] = (map[t.category] || 0) + Number(t.amount);
+        });
+        const categorySummary = Object.entries(map).map(([catId, value]) => {
+            const found = cfg.categories.find(c => c.id === catId) || { name: "Outros", color: "#8C8F99", icon: "Other" };
+            return { id: catId, name: found.name, value, color: found.color, icon: found.icon };
+        }).sort((a, b) => b.value - a.value);
+        const totalDespesas = categorySummary.reduce((s, c) => s + c.value, 0) || 1;
+
+        const recentTxs = currentTxs.slice().reverse().slice(0, 5);
+
+        return `
+            <div>
+                <div class="month-switch">
+                    <button onclick="window.app.shiftMonth(-1)">${icon('Left')}</button>
+                    <span class="label">${esc(monthLabel(state.selectedMonth))}</span>
+                    <button onclick="window.app.shiftMonth(1)">${icon('Right')}</button>
+                </div>
+
+                <div class="card hero-card">
+                    ${tplBalanceRing(receitas, despesas, saldo)}
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="hero-stat-dot" style="background:var(--accent)"></span>
+                            <div>
+                                <div class="hero-stat-label">Entradas</div>
+                                <div class="hero-stat-value positive">${fmtCurrency(receitas)}</div>
                             </div>
-                        )}
-                    </div>
-
-                    <div className="card">
-                        <h2>Lançamentos Recentes do Mês</h2>
-                        {currentTxs.length === 0 ? (
-                            <div className="empty-state">Toque no botão central (+) para cadastrar.</div>
-                        ) : (
-                            currentTxs.slice(0, 5).map(t => {
-                                const catObj = config.categories.find(c => c.id === t.category) || { name: 'Outros', color: '#999' };
-                                const userColor = t.person === "Ambos" ? "var(--color-ambos)" : (t.person === config.names[0] ? "var(--color-p1)" : "var(--color-p2)");
-                                return (
-                                    <div className="tx-row" key={t.id}>
-                                        <div className="tx-icon-wrapper" style={{ background: catObj.color + '22', color: catObj.color }}>
-                                            {Icons[catObj.icon] ? Icons[catObj.icon]() : Icons.Other()}
-                                        </div>
-                                        <div className="tx-info">
-                                            <div className="tx-desc">{t.description}</div>
-                                            <div className="tx-meta">
-                                                <span>{catObj.name}</span>
-                                                <span className="badge-user" style={{ background: userColor }}>{t.person}</span>
-                                            </div>
-                                        </div>
-                                        <div className="tx-amt" style={{ color: t.type === 'receita' ? 'var(--accent)' : 'var(--expense)' }}>
-                                            {t.type === 'receita' ? '+' : '-'}{fmtCurrency(t.amount)}
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // 4. TRANSACTIONS VIEW (LISTAGEM INTEGRAL)
-        function TransactionsView({ config, transactions, filterCat, setFilterCat, onEdit, onDelete }) {
-            const filteredList = React.useMemo(() => {
-                let list = [...transactions];
-                if (filterCat !== "todas") list = list.filter(t => t.category === filterCat);
-                return list.sort((a,b) => (a.date < b.date ? 1 : -1));
-            }, [transactions, filterCat]);
-
-            return (
-                <div>
-                    <div className="filter-row">
-                        <span className={`chip ${filterCat === 'todas' ? 'active' : ''}`} onClick={() => setFilterCat('todas')}>Todas</span>
-                        {config.categories.map(c => (
-                            <span key={c.id} className={`chip ${filterCat === c.id ? 'active' : ''}`} onClick={() => setFilterCat(c.id)}>{c.name}</span>
-                        ))}
-                    </div>
-
-                    <div className="card">
-                        {filteredList.length === 0 ? (
-                            <div className="empty-state">Nenhum registro para exibir.</div>
-                        ) : (
-                            filteredList.map(t => {
-                                const catObj = config.categories.find(c => c.id === t.category) || { name: 'Outros', color: '#999' };
-                                const userColor = t.person === "Ambos" ? "var(--color-ambos)" : (t.person === config.names[0] ? "var(--color-p1)" : "var(--color-p2)");
-                                return (
-                                    <div className="tx-row" key={t.id}>
-                                        <div className="tx-icon-wrapper" style={{ background: catObj.color + '22', color: catObj.color }}>
-                                            {Icons[catObj.icon] ? Icons[catObj.icon]() : Icons.Other()}
-                                        </div>
-                                        <div className="tx-info">
-                                            <div className="tx-desc">{t.description}</div>
-                                            <div className="tx-meta">
-                                                <span>{t.date.split("-").reverse().join("/")}</span>
-                                                <span className="badge-user" style={{ background: userColor }}>{t.person}</span>
-                                            </div>
-                                        </div>
-                                        <div className="tx-amt" style={{ color: t.type === 'receita' ? 'var(--accent)' : 'var(--expense)' }}>
-                                            {fmtCurrency(t.amount)}
-                                        </div>
-                                        <div className="tx-actions">
-                                            <button onClick={() => onEdit(t)}><Icons.Pencil/></button>
-                                            <button onClick={() => onDelete(t.id)}><Icons.Trash/></button>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        // 5. METAS VIEW COM CALCULADORA INTERATIVA
-        function GoalsView({ goals, onAdd, onEdit, onDelete, onSaveDirect }) {
-            return (
-                <div>
-                    <div className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <h2 style={{ margin: 0 }}>Metas de Economia</h2>
-                            <button className="chip active" onClick={onAdd}>+ Nova Meta</button>
                         </div>
-
-                        {goals.length === 0 ? (
-                            <div className="empty-state">Nenhuma meta criada. Defina objetivos como viagens, reserva, etc!</div>
-                        ) : (
-                            goals.map(g => (
-                                <GoalItemCard key={g.id} goal={g} onEdit={onEdit} onDelete={onDelete} onSaveDirect={onSaveDirect} />
-                            ))
-                        )}
+                        <div class="hero-stat">
+                            <span class="hero-stat-dot" style="background:var(--expense)"></span>
+                            <div>
+                                <div class="hero-stat-label">Saídas</div>
+                                <div class="hero-stat-value negative">${fmtCurrency(despesas)}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            );
+
+                <div class="card">
+                    <h2>Consumo por Categoria</h2>
+                    ${categorySummary.length === 0 ? `
+                        <div class="empty-state">Nenhum gasto registrado neste mês ainda.</div>
+                    ` : `
+                        <div class="chart-bar-container">
+                            ${categorySummary.map(c => {
+                                const pct = Math.round((c.value / totalDespesas) * 100);
+                                return `
+                                    <div class="chart-bar-row">
+                                        <div class="chart-bar-icon" style="background:${esc(c.color)}1f;color:${esc(c.color)}">${icon(c.icon, 13)}</div>
+                                        <div class="chart-bar-main">
+                                            <div class="chart-bar-top">
+                                                <span class="chart-bar-label">${esc(c.name)}</span>
+                                                <span class="chart-bar-pct" style="color:${esc(c.color)}">${pct}%</span>
+                                            </div>
+                                            <div class="chart-bar-track">
+                                                <div class="chart-bar-fill" style="width:${pct}%;background:${esc(c.color)}"></div>
+                                            </div>
+                                        </div>
+                                        <div class="chart-bar-value">${fmtCurrency(c.value)}</div>
+                                    </div>`;
+                            }).join('')}
+                        </div>
+                    `}
+                </div>
+
+                <div class="card">
+                    <h2>Lançamentos Recentes do Mês</h2>
+                    ${recentTxs.length === 0 ? `
+                        <div class="empty-state">Toque no botão central (+) para cadastrar.</div>
+                    ` : recentTxs.map(t => tplTxRow(t, cfg, false)).join('')}
+                </div>
+            </div>`;
+    }
+
+
+    function tplTxRow(t, cfg, showActions) {
+        const catObj = cfg.categories.find(c => c.id === t.category) || { name: 'Outros', color: '#999', icon: 'Other' };
+        const userColor = t.person === "Ambos" ? "var(--color-ambos)" : (t.person === cfg.names[0] ? "var(--color-p1)" : "var(--color-p2)");
+        return `
+            <div class="tx-row">
+                <div class="tx-icon-wrapper" style="background:${esc(catObj.color)}22;color:${esc(catObj.color)}">
+                    ${icon(catObj.icon)}
+                </div>
+                <div class="tx-info">
+                    <div class="tx-desc">${esc(t.description)}</div>
+                    <div class="tx-meta">
+                        <span>${showActions ? esc(String(t.date).split("-").reverse().join("/")) : esc(catObj.name)}</span>
+                        <span class="badge-user" style="background:${userColor}">${esc(t.person)}</span>
+                    </div>
+                </div>
+                <div class="tx-amt" style="color:${t.type === 'receita' ? 'var(--accent)' : 'var(--expense)'}">
+                    ${showActions ? '' : (t.type === 'receita' ? '+' : '-')}${fmtCurrency(t.amount)}
+                </div>
+                ${showActions ? `
+                    <div class="tx-actions">
+                        <button onclick="window.app.editTx('${esc(t.id)}')">${icon('Pencil')}</button>
+                        <button onclick="window.app.deleteTx('${esc(t.id)}')">${icon('Trash')}</button>
+                    </div>` : ''}
+            </div>`;
+    }
+
+    /* ---------- EXTRATO (TRANSACTIONS) ---------- */
+    function tplTransactions() {
+        const cfg = state.config;
+        let list = state.transactions.slice();
+        if (state.filterCat !== "todas") list = list.filter(t => t.category === state.filterCat);
+        list.sort((a, b) => (a.date < b.date ? 1 : -1));
+
+        return `
+            <div>
+                <div class="filter-row">
+                    <span class="chip ${state.filterCat === 'todas' ? 'active' : ''}" onclick="window.app.setFilterCat('todas')">Todas</span>
+                    ${cfg.categories.map(c => `
+                        <span class="chip ${state.filterCat === c.id ? 'active' : ''}" onclick="window.app.setFilterCat('${esc(c.id)}')">${esc(c.name)}</span>
+                    `).join('')}
+                </div>
+
+                <div class="card">
+                    ${list.length === 0 ? `
+                        <div class="empty-state">Nenhum registro para exibir.</div>
+                    ` : list.map(t => tplTxRow(t, cfg, true)).join('')}
+                </div>
+            </div>`;
+    }
+
+    /* ---------- METAS (GOALS) ---------- */
+    function tplGoals() {
+        return `
+            <div>
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h2 style="margin:0">Metas de Economia</h2>
+                        <button class="chip active" onclick="window.app.openNewGoalModal()">+ Nova Meta</button>
+                    </div>
+
+                    ${state.goals.length === 0 ? `
+                        <div class="empty-state">Nenhuma meta criada. Defina objetivos como viagens, reserva, etc!</div>
+                    ` : state.goals.map(g => tplGoalCard(g)).join('')}
+                </div>
+            </div>`;
+    }
+
+    function calcGoalResultHtml(goal, inputs) {
+        const missingAmount = Math.max(0, Number(goal.target) - Number(goal.current));
+        const aporte = parseFloat(inputs.monthly);
+        let calculatedMonths = null;
+        if (aporte && aporte > 0 && missingAmount > 0) {
+            calculatedMonths = Math.ceil(missingAmount / aporte);
         }
+        if (missingAmount === 0) {
+            return `<div class="goal-calc-result" style="color:var(--accent)">🎉 Objetivo alcançado!</div>`;
+        } else if (calculatedMonths !== null) {
+            return `<div class="goal-calc-result">Com aportes de ${fmtCurrency(inputs.monthly)}, vocês atingirão a meta em <strong>${calculatedMonths} ${calculatedMonths === 1 ? 'mês' : 'meses'}</strong>!</div>`;
+        }
+        return '';
+    }
 
-        function GoalItemCard({ goal, onEdit, onDelete, onSaveDirect }) {
-            const [amountAction, setAmountAction] = React.useState("");
-            const [calcMonthly, setCalcMonthly] = React.useState("");
+    function tplGoalCard(goal) {
+        if (!state.goalCalcInputs[goal.id]) state.goalCalcInputs[goal.id] = { amount: '', monthly: '' };
+        const inputs = state.goalCalcInputs[goal.id];
 
-            const pct = goal.target > 0 ? Math.min(100, Math.round((Number(goal.current) / Number(goal.target)) * 100)) : 0;
-            const missingAmount = Math.max(0, Number(goal.target) - Number(goal.current));
-            
-            // Calculadora: Meses previstos = Restante / Aporte Mensal
-            const calculatedMonths = React.useMemo(() => {
-                const aporte = parseFloat(calcMonthly);
-                if (!aporte || aporte <= 0 || missingAmount <= 0) return null;
-                return Math.ceil(missingAmount / aporte);
-            }, [calcMonthly, missingAmount]);
+        const pct = goal.target > 0 ? Math.min(100, Math.round((Number(goal.current) / Number(goal.target)) * 100)) : 0;
+        const missingAmount = Math.max(0, Number(goal.target) - Number(goal.current));
 
-            const handleUpdateFunds = (isAdding) => {
-                const val = parseFloat(amountAction);
-                if (!val || val <= 0) return;
-                const nextCurrent = isAdding ? Number(goal.current) + val : Math.max(0, Number(goal.current) - val);
-                onSaveDirect({ ...goal, current: nextCurrent });
-                setAmountAction("");
-            };
+        const calcResultHtml = calcGoalResultHtml(goal, inputs);
+        return `
+            <div class="goal-card">
+                <div class="goal-top">
+                    <span class="goal-name">${esc(goal.name)}</span>
+                    <span class="goal-pct ${pct >= 100 ? 'done' : ''}">${pct}%</span>
+                </div>
+                <div class="goal-progress-track">
+                    <div class="goal-progress-fill" style="width:${pct}%"></div>
+                </div>
+                <div class="goal-amounts">
+                    <span>${fmtCurrency(goal.current)} guardados</span>
+                    <span>Alvo: ${fmtCurrency(goal.target)}</span>
+                </div>
 
-            return (
-                <div className="goal-card">
-                    <div className="goal-top">
-                        <span className="goal-name">{goal.name}</span>
-                        <span className={`goal-pct ${pct >= 100 ? "done" : ""}`}>{pct}%</span>
-                    </div>
-                    <div className="goal-progress-track">
-                        <div className="goal-progress-fill" style={{ width: `${pct}%` }}></div>
-                    </div>
-                    <div className="goal-amounts">
-                        <span>{fmtCurrency(goal.current)} guardados</span>
-                        <span>Alvo: {fmtCurrency(goal.target)}</span>
-                    </div>
+                <div style="display:flex;gap:6px;margin-top:12px;">
+                    <input
+                        type="number"
+                        style="flex:1;padding:6px 10px;font-size:12px;border-radius:8px;border:1px solid var(--border);"
+                        placeholder="Valor R$"
+                        value="${esc(inputs.amount)}"
+                        oninput="window.app.updateGoalCalcInput('${esc(goal.id)}','amount', this.value)"
+                    />
+                    <button class="chip" style="border-color:var(--accent);color:var(--accent)" onclick="window.app.adjustGoalFunds('${esc(goal.id)}', true)">+ Adicionar</button>
+                    <button class="chip" style="border-color:var(--expense);color:var(--expense)" onclick="window.app.adjustGoalFunds('${esc(goal.id)}', false)">- Retirar</button>
+                </div>
 
-                    {/* Ações Rápidas de Fundos */}
-                    <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                        <input 
-                            type="number" 
-                            style={{ flex: 1, padding: '6px 10px', fontSize: 12, borderRadius: 8, border: '1px solid var(--border)' }}
-                            placeholder="Valor R$" 
-                            value={amountAction}
-                            onChange={(e) => setAmountAction(e.target.value)}
+                <div class="goal-calc-box">
+                    <div class="goal-calc-title">${icon('Calculator')} Previsão de Tempo</div>
+                    <div class="goal-calc-input-row">
+                        <input
+                            type="number"
+                            placeholder="Aporte mensal planejado (R$)"
+                            value="${esc(inputs.monthly)}"
+                            oninput="window.app.updateGoalCalcInput('${esc(goal.id)}','monthly', this.value)"
                         />
-                        <button className="chip" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }} onClick={() => handleUpdateFunds(true)}>+ Adicionar</button>
-                        <button className="chip" style={{ borderColor: 'var(--expense)', color: 'var(--expense)' }} onClick={() => handleUpdateFunds(false)}>- Retirar</button>
                     </div>
+                    <div id="goal-calc-result-${esc(goal.id)}">${calcResultHtml}</div>
+                </div>
 
-                    {/* Pequena Calculadora Preditiva Integrada */}
-                    <div className="goal-calc-box">
-                        <div className="goal-calc-title">
-                            <Icons.Calculator /> Previsão de Tempo
-                        </div>
-                        <div className="goal-calc-input-row">
-                            <input 
-                                type="number" 
-                                placeholder="Aporte mensal planejado (R$)" 
-                                value={calcMonthly} 
-                                onChange={(e) => setCalcMonthly(e.target.value)}
-                            />
-                        </div>
-                        {missingAmount === 0 ? (
-                            <div className="goal-calc-result" style={{ color: 'var(--accent)' }}>🎉 Objetivo alcançado!</div>
-                        ) : (
-                            calculatedMonths !== null && (
-                                <div className="goal-calc-result">
-                                    Com aportes de {fmtCurrency(calcMonthly)}, vocês atingirão a meta em <strong>{calculatedMonths} {calculatedMonths === 1 ? 'mês' : 'meses'}</strong>!
-                                </div>
-                            )
-                        )}
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+                    <button style="font-size:11px;color:var(--ink-soft);border:none;background:none;cursor:pointer;" onclick="window.app.editGoal('${esc(goal.id)}')">Editar Parâmetros</button>
+                    <button style="font-size:11px;color:var(--expense);border:none;background:none;cursor:pointer;" onclick="window.app.deleteGoal('${esc(goal.id)}')">Excluir</button>
+                </div>
+            </div>`;
+    }
+
+    /* ---------- PERFIS (PROFILES) ---------- */
+    function computeProfileMetrics(name) {
+        const cfg = state.config;
+        const monthTxs = state.transactions.filter(t => t.date && String(t.date).startsWith(state.selectedMonth));
+
+        const diretosReceita = monthTxs.filter(t => t.person === name && t.type === 'receita').reduce((s, t) => s + Number(t.amount), 0);
+        const diretosDespesa = monthTxs.filter(t => t.person === name && t.type === 'despesa').reduce((s, t) => s + Number(t.amount), 0);
+
+        const ambosReceita = monthTxs.filter(t => t.person === 'Ambos' && t.type === 'receita').reduce((s, t) => s + Number(t.amount), 0) / 2;
+        const ambosDespesa = monthTxs.filter(t => t.person === 'Ambos' && t.type === 'despesa').reduce((s, t) => s + Number(t.amount), 0) / 2;
+
+        const categoriasMap = {};
+        monthTxs.filter(t => t.type === 'despesa' && (t.person === name || t.person === 'Ambos')).forEach(t => {
+            const weight = t.person === 'Ambos' ? 0.5 : 1;
+            categoriasMap[t.category] = (categoriasMap[t.category] || 0) + (Number(t.amount) * weight);
+        });
+
+        return {
+            totalReceitas: diretosReceita + ambosReceita,
+            totalDespesas: diretosDespesa + ambosDespesa,
+            breakdown: Object.entries(categoriasMap).map(([id, val]) => {
+                const found = cfg.categories.find(c => c.id === id) || { name: 'Outros' };
+                return { name: found.name, val };
+            }).sort((a, b) => b.val - a.val)
+        };
+    }
+
+    function tplProfileCard(name, colorVar, stats) {
+        return `
+            <div class="card">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span style="color:${colorVar}">${icon('User')}</span>
+                    <h2 style="margin:0">Padrão de Consumo: ${esc(name)}</h2>
+                </div>
+                <div class="profile-box-grid">
+                    <div class="profile-box">
+                        <div class="profile-box-title" style="color:var(--accent)">Ganhos Proporcionais</div>
+                        <div class="profile-box-val">${fmtCurrency(stats.totalReceitas)}</div>
                     </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-                        <button style={{ fontSize: 11, color: 'var(--ink-soft)', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => onEdit(goal)}>Editar Parâmetros</button>
-                        <button style={{ fontSize: 11, color: 'var(--expense)', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => onDelete(goal.id)}>Excluir</button>
+                    <div class="profile-box">
+                        <div class="profile-box-title" style="color:var(--expense)">Gastos Totais (C/ Ambos)</div>
+                        <div class="profile-box-val">${fmtCurrency(stats.totalDespesas)}</div>
                     </div>
                 </div>
-            );
+                <div>
+                    <span style="font-size:11px;font-weight:600;color:var(--ink-soft)">Gastos por Categoria:</span>
+                    ${stats.breakdown.length === 0 ? `
+                        <p style="font-size:12px;color:var(--ink-soft);margin-top:4px;">Sem despesas vinculadas.</p>
+                    ` : `
+                        <div style="margin-top:6px;font-size:12px;">
+                            ${stats.breakdown.map(b => `
+                                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border);">
+                                    <span>${esc(b.name)}</span>
+                                    <span class="mono">${fmtCurrency(b.val)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            </div>`;
+    }
+
+    function tplProfiles() {
+        const cfg = state.config;
+        const p1Stats = computeProfileMetrics(cfg.names[0]);
+        const p2Stats = computeProfileMetrics(cfg.names[1]);
+        return `
+            <div>
+                ${tplProfileCard(cfg.names[0], 'var(--color-p1)', p1Stats)}
+                ${tplProfileCard(cfg.names[1], 'var(--color-p2)', p2Stats)}
+            </div>`;
+    }
+
+    /* ---------- CONFIGURAÇÕES (SETTINGS) ---------- */
+    const ICON_OPTIONS = [
+        { value: "Home", label: "Casa" },
+        { value: "Food", label: "Alimento" },
+        { value: "Transport", label: "Carro" },
+        { value: "Health", label: "Saúde" },
+        { value: "Shopping", label: "Lazer" },
+        { value: "Wallet2", label: "Carteira" },
+        { value: "TrendingUp2", label: "Crescimento" },
+        { value: "Gift", label: "Presente" },
+        { value: "Briefcase", label: "Trabalho" },
+        { value: "Other", label: "Outro" }
+    ];
+
+    function tplCategoryEditRow(c, i) {
+        return `
+            <div class="cat-edit-row">
+                <input type="color" class="cat-color-input" value="${esc(c.color)}"
+                    onchange="window.app.updateSettingsCategory(${i}, 'color', this.value)" />
+                <select class="cat-icon-select" onchange="window.app.updateSettingsCategory(${i}, 'icon', this.value)">
+                    ${ICON_OPTIONS.map(opt => `<option value="${opt.value}" ${c.icon === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                </select>
+                <input type="text" class="cat-name-input" value="${esc(c.name)}"
+                    oninput="window.app.updateSettingsCategory(${i}, 'name', this.value)" />
+                <select class="cat-type-select" onchange="window.app.updateSettingsCategory(${i}, 'type', this.value)">
+                    <option value="despesa" ${c.type === 'despesa' || !c.type ? 'selected' : ''}>Despesa</option>
+                    <option value="receita" ${c.type === 'receita' ? 'selected' : ''}>Receita</option>
+                    <option value="ambos" ${c.type === 'ambos' ? 'selected' : ''}>Ambos</option>
+                </select>
+                <button onclick="window.app.removeSettingsCategory(${i})" title="Excluir categoria">${icon('Trash')}</button>
+            </div>`;
+    }
+
+    function tplSettings() {
+        const cfg = state.config;
+        if (!state.settingsDraft) {
+            state.settingsDraft = {
+                appName: cfg.appName || "",
+                n1: cfg.names[0] || "",
+                n2: cfg.names[1] || "",
+                categories: cfg.categories.map(c => Object.assign({}, c))
+            };
         }
+        const d = state.settingsDraft;
 
-        // 6. ABA PERFIL & RESUMO FINANCEIRO INDIVIDUAL
-        function ProfilesSummaryView({ config, transactions, selectedMonth }) {
-            const monthTxs = React.useMemo(() => {
-                return transactions.filter(t => t.date && t.date.startsWith(selectedMonth));
-            }, [transactions, selectedMonth]);
+        return `
+            <div>
+                <div class="card">
+                    <h2>Personalização e Nomes</h2>
+                    <div class="field">
+                        <label>Nome do App</label>
+                        <input id="set-appname" value="${esc(d.appName)}" oninput="window.app.updateSettingsDraft('appName', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Nome Perfil Masculino/A</label>
+                        <input id="set-n1" value="${esc(d.n1)}" oninput="window.app.updateSettingsDraft('n1', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Nome Perfil Feminino/B</label>
+                        <input id="set-n2" value="${esc(d.n2)}" oninput="window.app.updateSettingsDraft('n2', this.value)" />
+                    </div>
+                    <button class="btn-primary" onclick="window.app.saveSettingsIdentity()">Salvar Alterações</button>
+                </div>
 
-            // Cálculo detalhado e proporcional: Gastos Pessoais + 50% dos compartilhados ("Ambos")
-            const computeMetrics = (name) => {
-                const diretosReceita = monthTxs.filter(t => t.person === name && t.type === 'receita').reduce((s,t) => s + Number(t.amount), 0);
-                const diretosDespesa = monthTxs.filter(t => t.person === name && t.type === 'despesa').reduce((s,t) => s + Number(t.amount), 0);
-                
-                // Ambos entram dividido por 2 no padrão individual
-                const ambosReceita = monthTxs.filter(t => t.person === 'Ambos' && t.type === 'receita').reduce((s,t) => s + Number(t.amount), 0) / 2;
-                const ambosDespesa = monthTxs.filter(t => t.person === 'Ambos' && t.type === 'despesa').reduce((s,t) => s + Number(t.amount), 0) / 2;
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                        <h2 style="margin:0">Categorias</h2>
+                        <button class="chip active" onclick="window.app.addSettingsCategory()">+ Nova Categoria</button>
+                    </div>
 
-                const categoriasMap = {};
-                monthTxs.filter(t => t.type === 'despesa' && (t.person === name || t.person === 'Ambos')).forEach(t => {
-                    const weight = t.person === 'Ambos' ? 0.5 : 1;
-                    categoriasMap[t.category] = (categoriasMap[t.category] || 0) + (Number(t.amount) * weight);
+                    <div class="cat-group-label">Despesas</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+                        ${d.categories.map((c, i) => ({ c, i })).filter(x => x.c.type !== 'receita').map(({ c, i }) => tplCategoryEditRow(c, i)).join('') || '<div class="empty-state" style="padding:12px 0;">Nenhuma categoria de despesa ainda.</div>'}
+                    </div>
+
+                    <div class="cat-group-label">Receitas</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        ${d.categories.map((c, i) => ({ c, i })).filter(x => x.c.type === 'receita').map(({ c, i }) => tplCategoryEditRow(c, i)).join('') || '<div class="empty-state" style="padding:12px 0;">Nenhuma categoria de receita ainda.</div>'}
+                    </div>
+
+                    <button class="btn-primary" style="margin-top:16px" onclick="window.app.saveSettingsIdentity()">Salvar Categorias</button>
+                </div>
+
+                <div class="card">
+                    <h2>Segurança e Senha na Planilha</h2>
+                    <div class="field">
+                        <label>Código PIN de Acesso</label>
+                        <input id="set-pin" type="text" value="${esc(state.sheetPin)}" oninput="window.app.updatePinDraft(this.value)" />
+                    </div>
+                    <button class="btn-primary" style="background:#4F46E5" onclick="window.app.saveSettingsPin()">Alterar Senha na Planilha</button>
+                </div>
+
+                <div style="text-align:center;padding:16px 0;color:var(--ink-soft);font-size:11px;">
+                    Versão do app: ${APP_BUILD}
+                </div>
+            </div>`;
+    }
+
+    /* ---------- MODAIS ---------- */
+    function tplTxModal() {
+        if (!state.showTxModal) return '';
+        const cfg = state.config;
+        const tx = state.editingTx;
+        const d = state.txDraft;
+        return `
+            <div class="modal-overlay" onclick="window.app.closeTxModal()">
+                <div class="modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h2>${tx ? "Editar Registro" : "Novo Lançamento"}</h2>
+                        <button onclick="window.app.closeTxModal()">${icon('X')}</button>
+                    </div>
+
+                    <div class="segmented" style="margin-bottom:14px">
+                        <button class="${d.type === 'despesa' ? 'active' : ''}" onclick="window.app.updateTxDraft('type','despesa')">Despesa</button>
+                        <button class="${d.type === 'receita' ? 'active' : ''}" onclick="window.app.updateTxDraft('type','receita')">Receita</button>
+                    </div>
+
+                    <div class="field">
+                        <label>Descrição</label>
+                        <input value="${esc(d.description)}" placeholder="Ex: Mercado da Esquina" oninput="window.app.updateTxDraft('description', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Valor (R$)</label>
+                        <input type="number" value="${esc(d.amount)}" placeholder="0.00" oninput="window.app.updateTxDraft('amount', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Data</label>
+                        <input type="date" value="${esc(d.date)}" oninput="window.app.updateTxDraft('date', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Categoria</label>
+                        <select onchange="window.app.updateTxDraft('category', this.value)">
+                            ${cfg.categories.filter(c => c.type === d.type || c.type === 'ambos' || !c.type).map(c => `<option value="${esc(c.id)}" ${d.category === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Quem pagou / Responsável</label>
+                        <div class="segmented">
+                            <button class="${d.person === cfg.names[0] ? 'active' : ''}" onclick="window.app.updateTxDraft('person','${esc(cfg.names[0])}')">${esc(cfg.names[0])}</button>
+                            <button class="${d.person === cfg.names[1] ? 'active' : ''}" onclick="window.app.updateTxDraft('person','${esc(cfg.names[1])}')">${esc(cfg.names[1])}</button>
+                            <button class="${d.person === 'Ambos' ? 'active' : ''}" onclick="window.app.updateTxDraft('person','Ambos')">Ambos</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" onclick="window.app.submitTxModal()">Gravar na Planilha</button>
+                </div>
+            </div>`;
+    }
+
+    function tplGoalModal() {
+        if (!state.showGoalModal) return '';
+        const goal = state.editingGoal;
+        const d = state.goalDraft;
+        return `
+            <div class="modal-overlay" onclick="window.app.closeGoalModal()">
+                <div class="modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h2>${goal ? "Editar Configurações da Meta" : "Criar Nova Meta Coletiva"}</h2>
+                        <button onclick="window.app.closeGoalModal()">${icon('X')}</button>
+                    </div>
+                    <div class="field">
+                        <label>Nome do Objetivo</label>
+                        <input value="${esc(d.name)}" placeholder="Ex: Viagem de Fim de Ano" oninput="window.app.updateGoalDraft('name', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Valor Alvo Total (R$)</label>
+                        <input type="number" value="${esc(d.target)}" placeholder="5000.00" oninput="window.app.updateGoalDraft('target', this.value)" />
+                    </div>
+                    <div class="field">
+                        <label>Valor Inicial Já Guardado (R$)</label>
+                        <input type="number" value="${esc(d.current)}" placeholder="0.00" oninput="window.app.updateGoalDraft('current', this.value)" />
+                    </div>
+                    <button class="btn-primary" onclick="window.app.submitGoalModal()">Salvar Parâmetros</button>
+                </div>
+            </div>`;
+    }
+
+    /* ==================== MAIN APP TEMPLATE ==================== */
+    function tplMainApp() {
+        let viewHtml = '';
+        if (state.view === 'dashboard') viewHtml = tplDashboard();
+        else if (state.view === 'transactions') viewHtml = tplTransactions();
+        else if (state.view === 'goals') viewHtml = tplGoals();
+        else if (state.view === 'profiles') viewHtml = tplProfiles();
+        else if (state.view === 'settings') viewHtml = tplSettings();
+
+        return `
+            <div class="app-container">
+                ${tplHeader()}
+                <div class="main-content">
+                    ${viewHtml}
+                </div>
+                ${tplBottomNav()}
+                ${tplTxModal()}
+                ${tplGoalModal()}
+                ${state.toast ? `<div class="toast">${esc(state.toast)}</div>` : ''}
+            </div>`;
+    }
+
+    /* ==================== RENDER PRINCIPAL ==================== */
+    function render() {
+        try {
+            let html;
+            if (state.loading) {
+                html = tplLoading();
+            } else if (state.loadError) {
+                html = tplLoadError();
+            } else if (!state.config) {
+                html = tplOnboarding();
+            } else if (state.sheetPin && !state.unlocked) {
+                html = tplLockScreen();
+            } else {
+                html = tplMainApp();
+            }
+            root.innerHTML = html;
+
+            // Foco automático em inputs relevantes após o render
+            if (state.sheetPin && !state.unlocked && !state.loading && !state.loadError && state.config) {
+                const pinEl = document.getElementById('lock-pin-input');
+                if (pinEl) {
+                    pinEl.addEventListener('input', (e) => {
+                        state.lockPinInput = e.target.value.replace(/\D/g, '');
+                        state.lockError = false;
+                        e.target.value = state.lockPinInput;
+                    });
+                    pinEl.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') window.app.checkLockPin();
+                    });
+                }
+            }
+            if (!state.config && !state.loading && !state.loadError) {
+                const n1 = document.getElementById('ob-n1');
+                const n2 = document.getElementById('ob-n2');
+                const pin = document.getElementById('ob-pin');
+                if (n1) n1.addEventListener('input', (e) => { state.onboardN1 = e.target.value; updateOnboardButton(); });
+                if (n2) n2.addEventListener('input', (e) => { state.onboardN2 = e.target.value; updateOnboardButton(); });
+                if (pin) pin.addEventListener('input', (e) => {
+                    state.onboardPin = e.target.value.replace(/\D/g, '');
+                    e.target.value = state.onboardPin;
+                    updateOnboardButton();
                 });
-
-                return {
-                    totalReceitas: diretosReceita + ambosReceita,
-                    totalDespesas: diretosDespesa + ambosDespesa,
-                    breakdown: Object.entries(categoriasMap).map(([id, val]) => {
-                        const found = config.categories.find(c => c.id === id) || { name: 'Outros' };
-                        return { name: found.name, val };
-                    }).sort((a,b) => b.val - a.val)
-                };
-            };
-
-            const p1Stats = React.useMemo(() => computeMetrics(config.names[0]), [monthTxs, config.names]);
-            const p2Stats = React.useMemo(() => computeMetrics(config.names[1]), [monthTxs, config.names]);
-
-            return (
-                <div>
-                    {/* Perfil 1 */}
-                    <div className="card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <span style={{ color: 'var(--color-p1)' }}><Icons.User/></span>
-                            <h2 style={{ margin: 0 }}>Padrão de Consumo: {config.names[0]}</h2>
-                        </div>
-                        <div className="profile-box-grid">
-                            <div className="profile-box">
-                                <div className="profile-box-title" style={{ color: 'var(--accent)' }}>Ganhos Proporcionais</div>
-                                <div className="profile-box-val">{fmtCurrency(p1Stats.totalReceitas)}</div>
-                            </div>
-                            <div className="profile-box">
-                                <div className="profile-box-title" style={{ color: 'var(--expense)' }}>Gastos Totais (C/ Ambos)</div>
-                                <div className="profile-box-val">{fmtCurrency(p1Stats.totalDespesas)}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)' }}>Gastos por Categoria:</span>
-                            {p1Stats.breakdown.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>Sem despesas vinculadas.</p> : (
-                                <div style={{ marginTop: 6, fontSize: 12 }}>
-                                    {p1Stats.breakdown.map((b, i) => (
-                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed var(--border)' }}>
-                                            <span>{b.name}</span>
-                                            <span className="mono">{fmtCurrency(b.val)}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+            }
+        } catch (err) {
+            console.error("Erro ao renderizar:", err);
+            root.innerHTML = `
+                <div class="app-container">
+                    <div class="fatal-error">
+                        <h2 class="display">Ocorreu um erro ao exibir o app</h2>
+                        <p style="font-size:12px">${esc(err.message || String(err))}</p>
                     </div>
-
-                    {/* Perfil 2 */}
-                    <div className="card">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <span style={{ color: 'var(--color-p2)' }}><Icons.User/></span>
-                            <h2 style={{ margin: 0 }}>Padrão de Consumo: {config.names[1]}</h2>
-                        </div>
-                        <div className="profile-box-grid">
-                            <div className="profile-box">
-                                <div className="profile-box-title" style={{ color: 'var(--accent)' }}>Ganhos Proporcionais</div>
-                                <div className="profile-box-val">{fmtCurrency(p2Stats.totalReceitas)}</div>
-                            </div>
-                            <div className="profile-box">
-                                <div className="profile-box-title" style={{ color: 'var(--expense)' }}>Gastos Totais (C/ Ambos)</div>
-                                <div className="profile-box-val">{fmtCurrency(p2Stats.totalDespesas)}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-soft)' }}>Gastos por Categoria:</span>
-                            {p2Stats.breakdown.length === 0 ? <p style={{ fontSize: 12, color: 'var(--ink-soft)', marginTop: 4 }}>Sem despesas vinculadas.</p> : (
-                                <div style={{ marginTop: 6, fontSize: 12 }}>
-                                    {p2Stats.breakdown.map((b, i) => (
-                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed var(--border)' }}>
-                                            <span>{b.name}</span>
-                                            <span className="mono">{fmtCurrency(b.val)}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
+                </div>`;
         }
+    }
 
-        // 7. CONFIGURAÇÕES & CATEGORIAS EDITÁVEIS
-        function SettingsView({ config, currentPin, onUpdateConfig, onUpdatePin }) {
-            const [appName, setAppName] = React.useState(config.appName || "");
-            const [n1, setN1] = React.useState(config.names[0] || "");
-            const [n2, setN2] = React.useState(config.names[1] || "");
-            const [pinInput, setPinInput] = React.useState(currentPin || "");
-            const [categories, setCategories] = React.useState(config.categories || []);
+    // Atualiza só o botão de onboarding sem re-renderizar tudo (evita perder foco do input)
+    function updateOnboardButton() {
+        const btn = document.querySelector('.app-container .btn-primary');
+        if (!btn) return;
+        const ready = state.onboardN1.trim() && state.onboardN2.trim() && state.onboardPin.trim().length >= 4;
+        btn.disabled = !ready;
+    }
 
-            const handleSaveIdentity = () => {
-                onUpdateConfig({ appName, names: [n1, n2], categories });
-            };
-
-            const handleUpdateCat = (id, key, value) => {
-                const next = categories.map(c => c.id === id ? { ...c, [key]: value } : c);
-                setCategories(next);
-            };
-
-            return (
-                <div>
-                    <div className="card">
-                        <h2>Personalização e Nomes</h2>
-                        <div className="field">
-                            <label>Nome do App</label>
-                            <input value={appName} onChange={(e) => setAppName(e.target.value)} />
-                        </div>
-                        <div className="field">
-                            <label>Nome Perfil Masculino/A</label>
-                            <input value={n1} onChange={(e) => setN1(e.target.value)} />
-                        </div>
-                        <div className="field">
-                            <label>Nome Perfil Feminino/B</label>
-                            <input value={n2} onChange={(e) => setN2(e.target.value)} />
-                        </div>
-                        <button className="btn-primary" onClick={handleSaveIdentity}>Salvar Alterações</button>
-                    </div>
-
-                    <div className="card">
-                        <h2>Categorias Editáveis (Cores e Ícones)</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {categories.map(c => (
-                                <div className="cat-edit-row" key={c.id}>
-                                    <input 
-                                        type="color" 
-                                        className="cat-color-input" 
-                                        value={c.color} 
-                                        onChange={(e) => handleUpdateCat(c.id, 'color', e.target.value)}
-                                    />
-                                    <select 
-                                        className="cat-icon-select" 
-                                        value={c.icon}
-                                        onChange={(e) => handleUpdateCat(c.id, 'icon', e.target.value)}
-                                    >
-                                        <option value="Home">Casa</option>
-                                        <option value="Food">Alimento</option>
-                                        <option value="Transport">Carro</option>
-                                        <option value="Health">Saúde</option>
-                                        <option value="Shopping">Lazer</option>
-                                        <option value="Other">Outro</option>
-                                    </select>
-                                    <input 
-                                        type="text" 
-                                        className="cat-name-input" 
-                                        value={c.name} 
-                                        onChange={(e) => handleUpdateCat(c.id, 'name', e.target.value)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                        <button className="btn-secondary" style={{ marginTop: 12 }} onClick={handleSaveIdentity}>Aplicar Novas Cores/Ícones</button>
-                    </div>
-
-                    <div className="card">
-                        <h2>Segurança e Senha na Planilha</h2>
-                        <div className="field">
-                            <label>Código PIN de Acesso</label>
-                            <input type="text" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ""))} />
-                        </div>
-                        <button className="btn-primary" style={{ background: '#4F46E5' }} onClick={() => onUpdatePin(pinInput)}>Alterar Senha na Planilha</button>
-                    </div>
-                </div>
-            );
+    // Re-renderiza só o toast (evita perder foco de inputs quando uma ação dispara um toast)
+    function renderToastOnly() {
+        const existing = document.querySelector('.toast');
+        if (state.toast) {
+            if (existing) {
+                existing.textContent = state.toast;
+            } else {
+                const el = document.createElement('div');
+                el.className = 'toast';
+                el.textContent = state.toast;
+                document.querySelector('.app-container').appendChild(el);
+            }
+        } else if (existing) {
+            existing.remove();
         }
+    }
 
-        /* ==================== BARRA DE NAVEGAÇÃO SUPERIOR/INFERIOR ==================== */
-        function BottomNav({ view, setView, onAddClick }) {
-            return (
-                <div className="bottom-nav">
-                    <button className={`nav-btn ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
-                        <Icons.Home /> Início
-                    </button>
-                    <button className={`nav-btn ${view === 'transactions' ? 'active' : ''}`} onClick={() => setView('transactions')}>
-                        <Icons.List /> Extrato
-                    </button>
-                    
-                    <button className="nav-add" onClick={onAddClick}>
-                        <Icons.Plus size="22"/>
-                    </button>
-                    
-                    <button className={`nav-btn ${view === 'goals' ? 'active' : ''}`} onClick={() => setView('goals')}>
-                        <Icons.Target /> Metas
-                    </button>
-                    <button className={`nav-btn ${view === 'profiles' ? 'active' : ''}`} onClick={() => setView('profiles')}>
-                        <Icons.User /> Perfis
-                    </button>
-                    <button className={`nav-btn ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}>
-                        <Icons.Settings /> Configs
-                    </button>
-                </div>
-            );
-        }
+    /* ==================== API PÚBLICA CHAMADA PELOS onclick/oninput DO HTML ==================== */
+    window.app = {
+        retryLoad: function () {
+            state.loading = true;
+            state.loadError = null;
+            render();
+            loadInitialData();
+        },
 
-        /* ==================== MODAIS FORMULÁRIOS ==================== */
-        
-        // MODAL TRANSAÇÃO
-        function TxModal({ config, tx, onClose, onSave }) {
-            const [type, setType] = React.useState(tx?.type || "despesa");
-            const [description, setDescription] = React.useState(tx?.description || "");
-            const [amount, setAmount] = React.useState(tx?.amount || "");
-            const [date, setDate] = React.useState(tx?.date || new Date().toISOString().slice(0, 10));
-            const [category, setCategory] = React.useState(tx?.category || config.categories[0]?.id || "outros");
-            const [person, setPerson] = React.useState(tx?.person || config.names[0]);
+        checkLockPin: function () {
+            const val = state.lockPinInput;
+            if (val === state.sheetPin) {
+                state.unlocked = true;
+                state.lockError = false;
+            } else {
+                state.lockError = true;
+                state.lockPinInput = "";
+            }
+            render();
+        },
 
-            const submit = () => {
-                const num = parseFloat(amount);
-                if (!description.trim() || !num || num <= 0) return;
-                onSave({ id: tx?.id, type, description: description.trim(), amount: num, date, category, person });
+        submitOnboard: function () {
+            const n1 = state.onboardN1.trim();
+            const n2 = state.onboardN2.trim();
+            const pin = state.onboardPin.trim();
+            if (!n1 || !n2 || pin.length < 4) return;
+            handleOnboard(n1, n2, pin);
+        },
+
+        setView: function (v) {
+            state.view = v;
+            state.settingsDraft = null; // recarrega rascunho de configurações ao reentrar na aba
+            render();
+        },
+
+        shiftMonth: function (delta) {
+            state.selectedMonth = shiftMonth(state.selectedMonth, delta);
+            render();
+        },
+
+        setFilterCat: function (cat) {
+            state.filterCat = cat;
+            render();
+        },
+
+        openNewTxModal: function () {
+            state.editingTx = null;
+            const despesaCats = state.config.categories.filter(c => c.type === 'despesa' || c.type === 'ambos' || !c.type);
+            state.txDraft = {
+                type: "despesa",
+                description: "",
+                amount: "",
+                date: new Date().toISOString().slice(0, 10),
+                category: (despesaCats[0] && despesaCats[0].id) || (state.config.categories[0] && state.config.categories[0].id) || "outros",
+                person: state.config.names[0]
             };
+            state.showTxModal = true;
+            render();
+        },
 
-            return (
-                <div className="modal-overlay" onClick={onClose}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>{tx ? "Editar Registro" : "Novo Lançamento"}</h2>
-                            <button onClick={onClose}><Icons.X/></button>
-                        </div>
-
-                        <div className="segmented" style={{ marginBottom: 14 }}>
-                            <button className={type === 'despesa' ? 'active' : ''} onClick={() => setType('despesa')}>Despesa</button>
-                            <button className={type === 'receita' ? 'active' : ''} onClick={() => setType('receita')}>Receita</button>
-                        </div>
-
-                        <div className="field">
-                            <label>Descrição</label>
-                            <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Mercado da Esquina" />
-                        </div>
-                        <div className="field">
-                            <label>Valor (R$)</label>
-                            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
-                        </div>
-                        <div className="field">
-                            <label>Data</label>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
-                        </div>
-                        <div className="field">
-                            <label>Categoria</label>
-                            <select value={category} onChange={e => setCategory(e.target.value)}>
-                                {config.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="field">
-                            <label>Quem pagou / Responsável</label>
-                            <div className="segmented">
-                                <button className={person === config.names[0] ? 'active' : ''} onClick={() => setPerson(config.names[0])}>{config.names[0]}</button>
-                                <button className={person === config.names[1] ? 'active' : ''} onClick={() => setPerson(config.names[1])}>{config.names[1]}</button>
-                                <button className={person === 'Ambos' ? 'active' : ''} onClick={() => setPerson('Ambos')}>Ambos</button>
-                            </div>
-                        </div>
-
-                        <button className="btn-primary" onClick={submit}>Gravar na Planilha</button>
-                    </div>
-                </div>
-            );
-        }
-
-        // MODAL METAS
-        function GoalModal({ goal, onClose, onSave }) {
-            const [name, setName] = React.useState(goal?.name || "");
-            const [target, setTarget] = React.useState(goal?.target || "");
-            const [current, setCurrent] = React.useState(goal?.current || "0");
-
-            const submit = () => {
-                const tgtVal = parseFloat(target);
-                const curVal = parseFloat(current) || 0;
-                if (!name.trim() || !tgtVal || tgtVal <= 0) return;
-                onSave({ id: goal?.id, name: name.trim(), target: tgtVal, current: curVal });
+        editTx: function (id) {
+            const tx = state.transactions.find(t => String(t.id) === String(id));
+            if (!tx) return;
+            state.editingTx = tx;
+            state.txDraft = {
+                type: tx.type || "despesa",
+                description: tx.description || "",
+                amount: tx.amount || "",
+                date: tx.date || new Date().toISOString().slice(0, 10),
+                category: tx.category || (state.config.categories[0] && state.config.categories[0].id) || "outros",
+                person: tx.person || state.config.names[0]
             };
+            state.showTxModal = true;
+            render();
+        },
 
-            return (
-                <div className="modal-overlay" onClick={onClose}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>{goal ? "Editar Configurações da Meta" : "Criar Nova Meta Coletiva"}</h2>
-                            <button onClick={onClose}><Icons.X/></button>
-                        </div>
-                        <div className="field">
-                            <label>Nome do Objetivo</label>
-                            <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Viagem de Fim de Ano" />
-                        </div>
-                        <div className="field">
-                            <label>Valor Alvo Total (R$)</label>
-                            <input type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="5000.00" />
-                        </div>
-                        <div className="field">
-                            <label>Valor Inicial Já Guardado (R$)</label>
-                            <input type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0.00" />
-                        </div>
-                        <button className="btn-primary" onClick={submit}>Salvar Parâmetros</button>
-                    </div>
-                </div>
-            );
+        closeTxModal: function () {
+            state.showTxModal = false;
+            state.editingTx = null;
+            render();
+        },
+
+        updateTxDraft: function (key, value) {
+            state.txDraft[key] = value;
+            // Campos de texto/número/data não disparam render() — evitaria perder o foco a cada tecla.
+            // Apenas 'type' e 'person' (vindos de botões) precisam re-renderizar para atualizar o estado "active".
+            if (key === 'type') {
+                // Ao trocar Despesa/Receita, a lista de categorias visível muda — se a categoria
+                // atualmente selecionada não pertence mais a essa lista, troca para a primeira válida.
+                const cfg = state.config;
+                const validCats = cfg.categories.filter(c => c.type === value || c.type === 'ambos' || !c.type);
+                const stillValid = validCats.some(c => c.id === state.txDraft.category);
+                if (!stillValid && validCats[0]) state.txDraft.category = validCats[0].id;
+                render();
+            } else if (key === 'person') {
+                render();
+            }
+        },
+
+        submitTxModal: function () {
+            const d = state.txDraft;
+            const num = parseFloat(d.amount);
+            if (!d.description.trim() || !num || num <= 0) {
+                showToast("Preencha descrição e um valor válido");
+                return;
+            }
+            handleSaveTx({
+                id: state.editingTx ? state.editingTx.id : undefined,
+                type: d.type,
+                description: d.description.trim(),
+                amount: num,
+                date: d.date,
+                category: d.category,
+                person: d.person
+            });
+        },
+
+        deleteTx: function (id) {
+            handleDeleteTx(id);
+        },
+
+        openNewGoalModal: function () {
+            state.editingGoal = null;
+            state.goalDraft = { name: "", target: "", current: "0" };
+            state.showGoalModal = true;
+            render();
+        },
+
+        editGoal: function (id) {
+            const goal = state.goals.find(g => String(g.id) === String(id));
+            if (!goal) return;
+            state.editingGoal = goal;
+            state.goalDraft = { name: goal.name || "", target: goal.target || "", current: goal.current || "0" };
+            state.showGoalModal = true;
+            render();
+        },
+
+        closeGoalModal: function () {
+            state.showGoalModal = false;
+            state.editingGoal = null;
+            render();
+        },
+
+        updateGoalDraft: function (key, value) {
+            state.goalDraft[key] = value;
+            // Sem render() aqui — todos os campos da meta são texto/número, re-renderizar perderia o foco.
+        },
+
+        submitGoalModal: function () {
+            const d = state.goalDraft;
+            const tgtVal = parseFloat(d.target);
+            const curVal = parseFloat(d.current) || 0;
+            if (!d.name.trim() || !tgtVal || tgtVal <= 0) {
+                showToast("Preencha nome e valor alvo válido");
+                return;
+            }
+            handleSaveGoal({
+                id: state.editingGoal ? state.editingGoal.id : undefined,
+                name: d.name.trim(),
+                target: tgtVal,
+                current: curVal
+            });
+        },
+
+        deleteGoal: function (id) {
+            handleDeleteGoal(id);
+        },
+
+        updateGoalCalcInput: function (goalId, key, value) {
+            if (!state.goalCalcInputs[goalId]) state.goalCalcInputs[goalId] = { amount: '', monthly: '' };
+            state.goalCalcInputs[goalId][key] = value;
+            // Sem render() completo aqui (perderia o foco do input a cada tecla).
+            // Quando o aporte mensal muda, atualizamos só o texto do resultado da previsão.
+            if (key === 'monthly') {
+                const goal = state.goals.find(g => String(g.id) === String(goalId));
+                const resultEl = document.getElementById('goal-calc-result-' + goalId);
+                if (goal && resultEl) {
+                    resultEl.innerHTML = calcGoalResultHtml(goal, state.goalCalcInputs[goalId]);
+                }
+            }
+        },
+
+        adjustGoalFunds: function (goalId, isAdding) {
+            const goal = state.goals.find(g => String(g.id) === String(goalId));
+            if (!goal) return;
+            const inputs = state.goalCalcInputs[goalId] || { amount: '' };
+            const val = parseFloat(inputs.amount);
+            if (!val || val <= 0) return;
+            const nextCurrent = isAdding ? Number(goal.current) + val : Math.max(0, Number(goal.current) - val);
+            state.goalCalcInputs[goalId].amount = '';
+            handleSaveGoal(Object.assign({}, goal, { current: nextCurrent }));
+        },
+
+        updateSettingsDraft: function (key, value) {
+            state.settingsDraft[key] = value;
+        },
+
+        updateSettingsCategory: function (index, key, value) {
+            state.settingsDraft.categories[index][key] = value;
+            // 'color' e 'icon' já eram re-renderizados; 'type' também precisa, pois muda
+            // o grupo (Despesas/Receitas) onde a categoria aparece visualmente.
+            if (key === 'color' || key === 'icon' || key === 'type') render();
+        },
+
+        addSettingsCategory: function () {
+            const newCat = {
+                id: 'cat-' + uid(),
+                name: '',
+                color: '#5B7FB5',
+                icon: 'Other',
+                type: 'despesa'
+            };
+            state.settingsDraft.categories.push(newCat);
+            render();
+            // Foca automaticamente no campo de nome da categoria recém-criada
+            setTimeout(() => {
+                const rows = document.querySelectorAll('.cat-name-input');
+                const lastInput = rows[rows.length - 1];
+                if (lastInput) lastInput.focus();
+            }, 0);
+        },
+
+        removeSettingsCategory: function (index) {
+            const cat = state.settingsDraft.categories[index];
+            if (!cat) return;
+            const inUse = state.transactions.some(t => t.category === cat.id);
+            if (inUse) {
+                showToast("Categoria em uso por lançamentos — não pode ser excluída");
+                return;
+            }
+            state.settingsDraft.categories.splice(index, 1);
+            render();
+        },
+
+        saveSettingsIdentity: function () {
+            const d = state.settingsDraft;
+            const cleanedCategories = d.categories
+                .map(c => Object.assign({}, c, { name: (c.name || '').trim() }))
+                .filter(c => c.name.length > 0);
+            if (cleanedCategories.length !== d.categories.length) {
+                showToast("Categorias sem nome foram ignoradas");
+            }
+            d.categories = cleanedCategories;
+            handleUpdateConfig({ appName: d.appName, names: [d.n1, d.n2], categories: cleanedCategories });
+        },
+
+        updatePinDraft: function (value) {
+            state._pinDraft = value;
+        },
+
+        saveSettingsPin: function () {
+            const newPin = state._pinDraft !== undefined ? state._pinDraft : state.sheetPin;
+            handleUpdatePin(newPin);
         }
+    };
 
-        // Inicialização do React 18 no elemento container raiz
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+    /* ==================== INICIALIZAÇÃO ==================== */
+    render();          // mostra a tela de loading imediatamente
+    loadInitialData();  // depois busca os dados reais da planilha
     </script>
 </body>
 </html>
